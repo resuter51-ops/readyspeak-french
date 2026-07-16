@@ -58,8 +58,48 @@
   .custom-badge { display:inline-block; background:#f0f4ff; color:#003189; font-size:0.6rem; font-weight:700; padding:1px 6px; border-radius:6px; margin-left:6px; letter-spacing:0.5px; vertical-align:middle; }
   .licensed { text-align:center; color:rgba(255,255,255,0.45); font-size:0.65rem; padding:4px 16px 0; }
 </style>
+
+
+
+<style id="lock-styles">
+#lockOverlay{position:fixed;inset:0;z-index:99999;background:rgba(5,5,10,0.97);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px;text-align:center;font-family:'Segoe UI',Arial,sans-serif}
+#lockOverlay .lock-icon{font-size:48px;margin-bottom:16px}
+#lockOverlay h2{color:#fff;font-size:22px;margin-bottom:8px;letter-spacing:1px}
+#lockOverlay p{color:#888;font-size:14px;line-height:1.6;max-width:320px;margin-bottom:20px}
+#lockOverlay .lock-input{padding:12px 16px;border-radius:10px;border:2px solid #333;background:#111;color:#fff;font-size:16px;width:260px;text-align:center;outline:none;margin-bottom:12px}
+#lockOverlay .lock-input:focus{border-color:#2d8a5e}
+#lockOverlay .lock-btn{padding:12px 32px;border-radius:10px;border:none;background:#2d8a5e;color:#fff;font-size:15px;font-weight:bold;cursor:pointer;letter-spacing:1px;transition:all 0.2s}
+#lockOverlay .lock-btn:hover{background:#36a86a;box-shadow:0 0 15px rgba(45,138,94,0.4)}
+#lockOverlay .lock-error{color:#e04040;font-size:13px;margin-top:8px;display:none}
+#lockOverlay .lock-demo{margin-top:18px;color:#555;font-size:13px}
+#lockOverlay .lock-demo a{color:#00aaff;text-decoration:none}
+#lockOverlay .lock-buy{margin-top:14px;display:inline-block;padding:8px 20px;border-radius:8px;background:rgba(45,138,94,0.2);border:1px solid rgba(45,138,94,0.5);color:#2d8a5e;text-decoration:none;font-size:13px;font-weight:bold}
+#lockOverlay .lock-buy:hover{background:rgba(45,138,94,0.35);color:#fff}
+</style>
 </head>
 <body>
+<div id="lockOverlay" style="display:none;">
+  <div class="lock-icon">🔒</div>
+  <h2>Unlock Full Phrasebook</h2>
+  <p>Enter your access code to unlock all phrases. Don't have a code yet? Get instant access for $1.99.</p>
+  <input type="text" class="lock-input" id="lockInput" placeholder="Enter access code" onkeypress="if(event.key==='Enter')tryUnlock()"/>
+  <button class="lock-btn" onclick="tryUnlock()">Unlock Now</button>
+  <div class="lock-error" id="lockError">Invalid code. Please try again.</div>
+  <a href="https://resuter51-ops.github.io/bobs-book-arcade/phrasebooks.html" class="lock-buy">Buy Access — $1.99</a>
+  <div class="lock-demo">Want to try first? <a href="#" onclick="enterDemo();return false;">Browse demo (10 phrases)</a></div>
+</div>
+
+<div id="lockOverlay" style="display:none;">
+  <div class="lock-icon">🔒</div>
+  <h2>Unlock Full Phrasebook</h2>
+  <p>Enter your access code to unlock all 300+ phrases. Don't have a code? Get instant access for $1.99.</p>
+  <input type="text" class="lock-input" id="lockInput" placeholder="Enter access code" onkeypress="if(event.key==='Enter')tryUnlock()"/>
+  <button class="lock-btn" onclick="tryUnlock()">Unlock Now</button>
+  <div class="lock-error" id="lockError">Invalid code. Please try again.</div>
+  <a href="https://resuter51-ops.github.io/bobs-book-arcade/phrasebooks.html" class="lock-buy">Buy Access — $1.99</a>
+  <div class="lock-demo">Want to try first? <a href="#" onclick="enterDemo();return false;">Browse demo (10 phrases)</a></div>
+</div>
+
 
 <div class="brand">ReadySpeak</div>
 <h1>🇫🇷 French Phrasebook</h1>
@@ -699,6 +739,64 @@ function deleteCustomPhrase(id) {
 }
 
 init();
+</script>
+
+
+
+<script id="lock-script">
+(function(){
+  var CODE='ReadySpeak!2026';
+  var STORAGE_KEY='readyspeak_unlocked';
+  var DEMO_LIMIT=10;
+  var params=new URLSearchParams(window.location.search);
+  var urlCode=params.get('unlock');
+  var isUnlocked=localStorage.getItem(STORAGE_KEY)==='true';
+  var isDemo=false;
+  if(urlCode&&urlCode===CODE){
+    localStorage.setItem(STORAGE_KEY,'true');
+    isUnlocked=true;
+    window.history.replaceState({},'',window.location.origin+window.location.pathname);
+  }
+  window.tryUnlock=function(){
+    var input=document.getElementById('lockInput');
+    var err=document.getElementById('lockError');
+    if(input.value.trim()===CODE){
+      localStorage.setItem(STORAGE_KEY,'true');
+      isUnlocked=true;isDemo=false;
+      removeLock();
+      if(typeof renderPhrases==='function')renderPhrases();
+    }else{
+      err.style.display='block';input.value='';
+      setTimeout(function(){err.style.display='none';},3000);
+    }
+  };
+  window.enterDemo=function(){
+    isDemo=true;removeLock();
+    if(typeof renderPhrases==='function')renderPhrases();
+    setTimeout(applyDemoLimit,50);
+  };
+  function removeLock(){var o=document.getElementById('lockOverlay');if(o)o.style.display='none';}
+  function showLock(){var o=document.getElementById('lockOverlay');if(o)o.style.display='flex';}
+  function applyDemoLimit(){
+    if(isUnlocked||!isDemo)return;
+    var list=document.getElementById('phraseList');
+    if(!list)return;
+    var cards=list.querySelectorAll('.phrase-card');
+    var total=cards.length;
+    cards.forEach(function(c,i){if(i>=DEMO_LIMIT)c.style.display='none';else c.style.display='';});
+    var old=document.getElementById('demoBanner');if(old)old.remove();
+    var b=document.createElement('div');b.id='demoBanner';
+    b.style.cssText='text-align:center;padding:20px;margin-top:10px;background:rgba(0,0,0,0.06);border-radius:12px';
+    b.innerHTML='<p style="font-size:14px;color:#666;margin-bottom:10px;">Demo mode \u2014 showing '+DEMO_LIMIT+' of '+total+' phrases.</p><a href="https://resuter51-ops.github.io/bobs-book-arcade/phrasebooks.html" style="display:inline-block;padding:10px 24px;background:#2d8a5e;color:#fff;border-radius:8px;text-decoration:none;font-weight:bold;font-size:14px;">Unlock All Phrases \u2014 $1.99</a>';
+    list.appendChild(b);
+  }
+  if(typeof renderPhrases==='function'){
+    var orig=renderPhrases;
+    renderPhrases=function(){orig.apply(this,arguments);setTimeout(applyDemoLimit,20);};
+  }
+  document.addEventListener('click',function(){if(isDemo&&!isUnlocked)setTimeout(applyDemoLimit,60);},true);
+  if(!isUnlocked)setTimeout(showLock,100);
+})();
 </script>
 </body>
 </html>
