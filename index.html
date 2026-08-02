@@ -745,27 +745,38 @@ init();
 
 <script id="lock-script">
 (function(){
-  var CODE='ReadySpeak!2026';
+  var CODE_HASH='89fbb941da807702c13d57083c86b1e3693d8ad5a832087a0ce0c8298c7e2259';function checkCode(input){var h=new TextEncoder().encode(input);return crypto.subtle.digest('SHA-256',h.buffer).then(function(buf){var hash=Array.from(new Uint8Array(buf)).map(function(b){return b.toString(16).padStart(2,'0')}).join('');return hash===CODE_HASH})}
   var STORAGE_KEY='readyspeak_unlocked';
   var DEMO_LIMIT=10;
   var params=new URLSearchParams(window.location.search);
   var urlCode=params.get('unlock');
   var isUnlocked=localStorage.getItem(STORAGE_KEY)==='true';
   var isDemo=false;
-  if(urlCode&&urlCode===CODE){
-    localStorage.setItem(STORAGE_KEY,'true');
-    isUnlocked=true;
-    window.history.replaceState({},'',window.location.origin+window.location.pathname);
+  if(urlCode){
+    checkCode(urlCode).then(function(valid){
+      if(valid){
+        localStorage.setItem(STORAGE_KEY,'true');
+        isUnlocked=true;
+        if(typeof renderPhrases==='function')renderPhrases();
+      }
+      window.history.replaceState({},'',window.location.origin+window.location.pathname);
+    });
   }
   window.tryUnlock=function(){
     var input=document.getElementById('lockInput');
     var err=document.getElementById('lockError');
-    if(input.value.trim()===CODE){
-      localStorage.setItem(STORAGE_KEY,'true');
-      isUnlocked=true;isDemo=false;
-      removeLock();
-      if(typeof renderPhrases==='function')renderPhrases();
-    }else{
+    checkCode(input.value.trim()).then(function(valid){
+      if(valid){
+        localStorage.setItem(STORAGE_KEY,'true');
+        isUnlocked=true;isDemo=false;
+        removeLock();
+        if(typeof renderPhrases==='function')renderPhrases();
+      }else{
+        err.style.display='block';input.value='';
+        setTimeout(function(){err.style.display='none';},3000);
+      }
+    });
+    return;
       err.style.display='block';input.value='';
       setTimeout(function(){err.style.display='none';},3000);
     }
