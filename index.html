@@ -745,7 +745,7 @@ init();
 
 <script id="lock-script">
 (function(){
-  var CODE_HASH='89fbb941da807702c13d57083c86b1e3693d8ad5a832087a0ce0c8298c7e2259';function checkCode(input){var h=new TextEncoder().encode(input);return crypto.subtle.digest('SHA-256',h.buffer).then(function(buf){var hash=Array.from(new Uint8Array(buf)).map(function(b){return b.toString(16).padStart(2,'0')}).join('');return hash===CODE_HASH})}
+  var CODE_HASH='bf265b60424c0469be6458437934625960461496d7dd60f99806cdf289702e3f';function checkCode(input){var h=new TextEncoder().encode(input);return crypto.subtle.digest('SHA-256',h.buffer).then(function(buf){var hash=Array.from(new Uint8Array(buf)).map(function(b){return b.toString(16).padStart(2,'0')}).join('');return hash===CODE_HASH})}
   var STORAGE_KEY='readyspeak_unlocked';
   var DEMO_LIMIT=10;
   var params=new URLSearchParams(window.location.search);
